@@ -1,0 +1,15 @@
+# Virtual environment
+.venv/
+
+# Local secrets
+.env
+
+# Aiven TLS certificate
+backend/database/ca(1).pem
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Testing
+.pytest_cache/
