@@ -280,7 +280,7 @@ export function AdminDashboard() {
                         <td>
                           <button 
                             className="btn-action"
-                            onClick={() => alert(`Opening official scan viewer for ${app.id}...`)}
+                            onClick={() => navigate(`/admin/review/${app.id}`)}
                           >
                             Inspect Record
                           </button>

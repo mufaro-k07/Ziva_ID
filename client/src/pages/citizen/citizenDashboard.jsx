@@ -111,17 +111,19 @@ export function CitizenDashboard() {
       btnType: "btn-green",
       action: () => navigate('/citizen/apply/birth')
     },
-    // Passports and Driver's license have been commented out for now because they are outside my current project scope
-    // {
-    //   id: "national-id",
-    //   title: "National ID Card",
-    //   desc: "First-time registration, replacement of lost ID, or details change.",
-    //   status: "Available",
-    //   btnText: "Apply Now",
-    //   btnType: "btn-green",
-    //   action: () => navigate('/citizen/apply/id')
-    // },
-    // {
+    {
+        id: "national-id",
+        title: "National ID Card",
+        desc: "First-time registration, replacement of lost ID, or details change.",
+        status: "Available",
+        btnText: "Apply Now",
+        btnType: "btn-green",
+        action: () => navigate('/citizen/apply/id')
+      },
+
+      
+      // Passports and Driver's license have been commented out for now because they are outside my current project scope
+      // {
     //   id: "passport",
     //   title: "e-Passport",
     //   desc: "Ordinary or Emergency electronic passport application.",
