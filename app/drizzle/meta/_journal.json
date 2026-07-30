@@ -8,6 +8,13 @@
       "when": 1785437098489,
       "tag": "0000_wise_captain_america",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1785442687370,
+      "tag": "0001_simple_junta",
+      "breakpoints": true
     }
   ]
 }

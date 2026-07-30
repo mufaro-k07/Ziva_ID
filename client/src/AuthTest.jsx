@@ -1,3 +1,11 @@
+// ⚠️ NOT IN USE — kept for testing purposes only.
+//
+// A scratch harness built to verify the Better Auth client wiring (sign-up,
+// sign-in, sign-out, useSession) during development. It is not routed and
+// nothing imports it. The real authentication screens are in
+// src/pages/auth/. Note the hardcoded demo credentials below are placeholders
+// for local testing only.
+
 import { useState } from "react";
 import { signUp, signIn, signOut, useSession } from "./lib/auth-client";
 

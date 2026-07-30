@@ -1,3 +1,10 @@
+// ⚠️ NOT IN USE — kept for testing/reference purposes only.
+//
+// This is an earlier version of the router. The live routing configuration is
+// in src/App.jsx, which is what src/main.jsx imports. Nothing imports this file.
+// Retained deliberately as a development reference; do not edit it expecting
+// the running application to change.
+
 // src/App.jsx
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import AuthGateway from './pages/auth/authgateway';

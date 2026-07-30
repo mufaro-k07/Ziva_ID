@@ -120,9 +120,14 @@ export const intakeRecords = pgTable(
     status: statusEnum("status").default("submitted").notNull(),
 
     fullName: text("full_name").notNull(),
-    dateOfBirth: text("date_of_birth").notNull(), 
+    dateOfBirth: text("date_of_birth").notNull(),
     gender: text("gender").notNull(),
     placeOfOrigin: text("place_of_origin").notNull(),
+
+    // Two-digit Zimbabwe registry district code (e.g. "63" for Harare), which
+    // forms the prefix of a National ID. Nullable: records submitted before
+    // this column existed have no value, and the client may omit it.
+    districtCode: text("district_code"),
 
     details: text("details"), 
 

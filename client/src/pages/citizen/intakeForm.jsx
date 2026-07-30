@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ZIM_DISTRICTS } from '../../utils/zimDistricts'; 
+import { ZIM_DISTRICTS } from '../../utils/zimDistricts';
+import MultilingualLabel from '../../components/MultilingualLabel';
+import { multilingualLabels as L } from '../../constants/multilingualLabels';
+import { API_BASE } from '../../utils/records';
 import '../../assets/dashboard.css';
-
-const API_BASE = import.meta.env.VITE_BETTER_AUTH_URL || 'http://localhost:3000';
 
 const DOC_TYPE_MAP = {
   birth: 'birth_certificate',
@@ -20,12 +21,17 @@ const PAGE_CONFIG = {
       'Marriage certificate (if parents are married)',
     ],
     detailsFields: [
-      { key: 'motherName', label: "Mother's Full Name", required: true },
-      { key: 'motherMaidenName', label: "Mother's Maiden Name", required: true },
-      { key: 'motherIdNumber', label: "Mother's National ID (XX-XXXXXX X XX)", required: true },
-      { key: 'fatherName', label: "Father's Full Name (Optional if unacknowledged)" },
-      { key: 'fatherIdNumber', label: "Father's National ID (Optional)" },
-      { key: 'hospitalOfBirth', label: 'Hospital / Clinic of Birth', required: true },
+      { key: 'motherName', labels: L.motherFullName, required: true },
+      { key: 'motherMaidenName', labels: L.motherMaidenName, required: true },
+      {
+        key: 'motherIdNumber',
+        labels: L.motherNationalId,
+        hint: 'Format: XX-XXXXXX X XX',
+        required: true,
+      },
+      { key: 'fatherName', labels: L.fatherFullName, hint: 'Optional if unacknowledged' },
+      { key: 'fatherIdNumber', labels: L.fatherNationalId, hint: 'Optional' },
+      { key: 'hospitalOfBirth', labels: L.hospitalOfBirth, required: true },
     ],
   },
   national_id: {
@@ -38,9 +44,19 @@ const PAGE_CONFIG = {
       'Marriage certificate (if changing surname after marriage)',
     ],
     detailsFields: [
-      { key: 'birthEntryNumber', label: 'Birth Certificate Entry Number (e.g. HRE-102938/2008)', required: true },
-      { key: 'applicationReason', label: 'Application Reason (First-Time / Replacement / Marriage Change)', required: true },
-      { key: 'guardianName', label: 'Accompanying Parent/Guardian Name (if under 18)' },
+      {
+        key: 'birthEntryNumber',
+        labels: L.birthCertificateEntryNumber,
+        hint: 'e.g. HRE-102938/2008',
+        required: true,
+      },
+      {
+        key: 'applicationReason',
+        labels: L.applicationReason,
+        hint: 'First-Time / Replacement / Marriage Change',
+        required: true,
+      },
+      { key: 'guardianName', labels: L.guardianName, hint: 'If the applicant is under 18' },
     ],
   },
 };
@@ -179,10 +195,15 @@ export function IntakeForm() {
       {error && <p className="auth-error" style={{ color: '#CE1126', fontWeight: 600 }}>{error}</p>}
 
       <form onSubmit={handleSubmit} className="table-card">
-        <h2 className="section-title">Personal Details</h2>
+        <h2 className="section-title">
+          {L.personalDetails.en}
+          <span className="section-title-translations" aria-hidden="true">
+            {L.personalDetails.sn} · {L.personalDetails.nd}
+          </span>
+        </h2>
 
         <div className="form-group">
-          <label htmlFor="fullName">Full Name</label>
+          <MultilingualLabel htmlFor="fullName" labels={L.fullName} required />
           <input
             id="fullName"
             type="text"
@@ -193,7 +214,7 @@ export function IntakeForm() {
         </div>
 
         <div className="form-group">
-          <label htmlFor="dateOfBirth">Date of Birth</label>
+          <MultilingualLabel htmlFor="dateOfBirth" labels={L.dateOfBirth} required />
           <input
             id="dateOfBirth"
             type="date"
@@ -204,21 +225,25 @@ export function IntakeForm() {
         </div>
 
         <div className="form-group">
-          <label htmlFor="gender">Gender</label>
+          <MultilingualLabel htmlFor="gender" labels={L.gender} required />
           <select
             id="gender"
             value={gender}
             onChange={(e) => setGender(e.target.value)}
             required
           >
-            <option value="">Select...</option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
+            <option value="">{L.selectOption.en}</option>
+            <option value="male">
+              {L.male.en} / {L.male.sn} / {L.male.nd}
+            </option>
+            <option value="female">
+              {L.female.en} / {L.female.sn} / {L.female.nd}
+            </option>
           </select>
         </div>
 
         <div className="form-group">
-          <label htmlFor="districtCode">District of Registration (Official Province Code)</label>
+          <MultilingualLabel htmlFor="districtCode" labels={L.districtOfRegistration} required />
           <select
             id="districtCode"
             value={districtCode}
@@ -238,7 +263,7 @@ export function IntakeForm() {
         </div>
 
         <div className="form-group">
-          <label htmlFor="placeOfOrigin">Place of Origin (City/Village/Facility)</label>
+          <MultilingualLabel htmlFor="placeOfOrigin" labels={L.placeOfOrigin} required />
           <input
             id="placeOfOrigin"
             type="text"
@@ -247,12 +272,22 @@ export function IntakeForm() {
             placeholder="e.g. Sally Mugabe Hospital, Harare"
             required
           />
+          <small style={{ color: '#64748B' }}>City, village, or facility.</small>
         </div>
 
-        <h2 className="section-title">Additional Details</h2>
+        <h2 className="section-title">
+          {L.additionalDetails.en}
+          <span className="section-title-translations" aria-hidden="true">
+            {L.additionalDetails.sn} · {L.additionalDetails.nd}
+          </span>
+        </h2>
         {config.detailsFields.map((field) => (
           <div className="form-group" key={field.key}>
-            <label htmlFor={field.key}>{field.label}</label>
+            <MultilingualLabel
+              htmlFor={field.key}
+              labels={field.labels}
+              required={field.required || false}
+            />
             <input
               id={field.key}
               type="text"
@@ -260,13 +295,25 @@ export function IntakeForm() {
               onChange={(e) => handleDetailChange(field.key, e.target.value)}
               required={field.required || false}
             />
+            {field.hint && <small style={{ color: '#64748B' }}>{field.hint}</small>}
           </div>
         ))}
 
-        <h2 className="section-title">Document Checklist</h2>
+        <h2 className="section-title">
+          {L.documentChecklist.en}
+          <span className="section-title-translations" aria-hidden="true">
+            {L.documentChecklist.sn} · {L.documentChecklist.nd}
+          </span>
+        </h2>
+        <p style={{ color: '#64748B', marginBottom: '4px' }}>
+          {L.iHaveThisDocument.en}
+          <span className="label-translations" style={{ display: 'block' }} aria-hidden="true">
+            {L.iHaveThisDocument.sn} · {L.iHaveThisDocument.nd}
+          </span>
+        </p>
         <p style={{ color: '#64748B', marginBottom: '12px' }}>
-          Tick the documents you currently have available. Don't worry if something is missing —
-          you can still submit, and an officer will guide you on what's needed.
+          Don't worry if something is missing — you can still submit, and an officer will guide you
+          on what's needed.
         </p>
         {checklist.map((item, index) => (
           <label

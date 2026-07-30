@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSession, signOut } from '../../lib/auth-client';
+import { API_BASE } from '../../utils/records';
 import '../../assets/dashboard.css';
 
 /* Including Icons*/
@@ -48,7 +49,6 @@ const STATUS_DISPLAY = {
   closed: { label: "Closed", badgeClass: "status-verified" },
 };
 
-const API_BASE = import.meta.env.VITE_BETTER_AUTH_URL || "http://localhost:3000"; 
 
 export function CitizenDashboard() {
   const [activeTab, setActiveTab] = useState('overview');

@@ -3,7 +3,8 @@ import { db } from "../db";
 import { user, intakeRecords, checklistItems, statusLogs } from "../db/schema";
 import { eq, desc } from "drizzle-orm";
 
-export const adminRoutes = new Elysia({ prefix: "/admin" })
+// Prefixed "/api/admin" — see the note in routes/citizen.ts.
+export const adminRoutes = new Elysia({ prefix: "/api/admin" })
   // This admin route will allow an admin to change the role of a user (citizen or admin)
   .patch(
     "/users/:id/role",
@@ -19,6 +20,14 @@ export const adminRoutes = new Elysia({ prefix: "/admin" })
     },
     {
       adminOnly: true,
+      detail: {
+        tags: ["Admin"],
+        summary: "Promote or demote a user",
+        description:
+          "Sets a user's role to `citizen` or `admin`. Role cannot be set at " +
+          "sign-up, so this is the only way to grant admin access — which means " +
+          "the first administrator must be promoted directly in the database.",
+      },
       body: t.Object({
         role: t.Union([t.Literal("citizen"), t.Literal("admin")]),
       }),
@@ -31,7 +40,14 @@ export const adminRoutes = new Elysia({ prefix: "/admin" })
     async () => {
       return db.select().from(user);
     },
-    { adminOnly: true }
+    {
+      adminOnly: true,
+      detail: {
+        tags: ["Admin"],
+        summary: "List all users",
+        description: "Returns every user account with its current role.",
+      },
+    }
   )
 
 //   Get all intake records and review queue for dashboard
@@ -46,7 +62,15 @@ export const adminRoutes = new Elysia({ prefix: "/admin" })
 
       return records;
     },
-    { adminOnly: true }
+    {
+      adminOnly: true,
+      detail: {
+        tags: ["Admin"],
+        summary: "Review queue",
+        description:
+          "Returns all intake records ordered newest-first. Not paginated.",
+      },
+    }
   )
 
 //   Get a single intake record by ID for review
@@ -106,6 +130,15 @@ export const adminRoutes = new Elysia({ prefix: "/admin" })
   },
   {
     adminOnly: true,
+    detail: {
+      tags: ["Admin"],
+      summary: "Inspect one intake record",
+      description:
+        "Looks a record up by its PUBLIC reference number (e.g. " +
+        "`ZID-BC-2026-482913`), not its database ID. Returns the record with " +
+        "`details` parsed into an object, its checklist items, and the full " +
+        "audit history newest-first with each officer's name.",
+    },
   }
 )
 
@@ -166,6 +199,19 @@ export const adminRoutes = new Elysia({ prefix: "/admin" })
   },
   {
     adminOnly: true,
+    detail: {
+      tags: ["Admin"],
+      summary: "Update status and write an audit entry",
+      description:
+        "Sets a new status on the record and appends a `status_logs` entry " +
+        "capturing the previous status, the new status, the acting officer, " +
+        "and the comment.\n\n" +
+        "The comment is MANDATORY (minimum 3 characters) — a status cannot " +
+        "change without a recorded reason. Records are updated in place, but " +
+        "their history is append-only and is never overwritten.\n\n" +
+        "Note: transitions are not currently validated, so any of the five " +
+        "statuses is accepted from any current state.",
+    },
     body: t.Object({
       newStatus: t.Union([
         t.Literal("submitted"),

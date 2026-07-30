@@ -11,6 +11,8 @@ import {
   submissionTier,
   formatDate,
 } from '../../utils/records';
+import MultilingualLabel from '../../components/MultilingualLabel';
+import { multilingualLabels as L } from '../../constants/multilingualLabels';
 import '../../assets/admin.css';
 
 /* --- Inline SVG Icons */
@@ -328,26 +330,47 @@ export function AdminDashboard() {
               <form onSubmit={handleIntakeSubmit}>
                 <div className="intake-form-grid">
                   <div className="form-field">
-                    <label>Full Legal Name (as on paper records)</label>
-                    <input type="text" placeholder="e.g. Farai Gumbura" required />
+                    <MultilingualLabel
+                      htmlFor="assistedFullName"
+                      labels={L.fullLegalName}
+                      required
+                    />
+                    <input
+                      id="assistedFullName"
+                      type="text"
+                      placeholder="e.g. Farai Gumbura"
+                      required
+                    />
+                    <small style={{ color: '#64748B' }}>As on paper records.</small>
                   </div>
 
                   <div className="form-field">
-                    <label>Document Service Type</label>
-                    <select required>
+                    <MultilingualLabel
+                      htmlFor="assistedDocumentType"
+                      labels={L.documentServiceType}
+                      required
+                    />
+                    <select id="assistedDocumentType" required>
                       <option value="birth_certificate">Birth Certificate (First Issue or Copy)</option>
                       <option value="national_id">National ID Card Registration</option>
                     </select>
                   </div>
 
                   <div className="form-field">
-                    <label>Date of Birth</label>
-                    <input type="date" required />
+                    <MultilingualLabel
+                      htmlFor="assistedDateOfBirth"
+                      labels={L.dateOfBirth}
+                      required
+                    />
+                    <input id="assistedDateOfBirth" type="date" required />
                   </div>
 
                   <div className="form-field">
-                    <label>District / Registry Province</label>
-                    <select>
+                    <MultilingualLabel
+                      htmlFor="assistedDistrict"
+                      labels={L.districtOrProvince}
+                    />
+                    <select id="assistedDistrict">
                       <option>Harare Metropolitan</option>
                       <option>Bulawayo Province</option>
                       <option>Manicaland (Mutare)</option>
@@ -357,13 +380,29 @@ export function AdminDashboard() {
                   </div>
 
                   <div className="form-field full-width">
-                    <label>Physical Residential Address or Village Chief Details</label>
-                    <input type="text" placeholder="e.g. House 412, Highfield, Harare" required />
+                    <MultilingualLabel
+                      htmlFor="assistedAddress"
+                      labels={L.residentialAddress}
+                      required
+                    />
+                    <input
+                      id="assistedAddress"
+                      type="text"
+                      placeholder="e.g. House 412, Highfield, Harare"
+                      required
+                    />
+                    <small style={{ color: '#64748B' }}>
+                      Physical address or village chief details.
+                    </small>
                   </div>
 
                   <div className="form-field full-width">
-                    <label>Officer Audit Notes & Supporting Documents Verified</label>
+                    {/* Officer-authored, not citizen-facing — English only by design. */}
+                    <label htmlFor="assistedOfficerNotes">
+                      Officer Audit Notes &amp; Supporting Documents Verified
+                    </label>
                     <textarea
+                      id="assistedOfficerNotes"
                       rows="3"
                       placeholder="List physical documents presented (e.g., Parent National IDs, Hospital Birth Record)..."
                     ></textarea>

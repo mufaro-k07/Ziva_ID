@@ -20,3 +20,50 @@
   --slate-900: #0F172A;
 }
 
+/* Multilingual form labels (SRS v1.0) — English primary, Shona/Ndebele quieter.
+   Global so every form picks it up without a new stylesheet import. */
+
+.multilingual-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+/* 13px matches the existing .form-group/.form-field label rules in
+   dashboard.css, auth.css and admin.css — same design system, not a new one. */
+.multilingual-label .label-primary {
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.multilingual-label .label-required {
+  color: var(--zim-red, #ce1126);
+}
+
+.multilingual-label .label-translations {
+  font-size: 0.78rem;
+  font-weight: 400;
+  line-height: 1.35;
+  color: #64748b;
+  /* Long three-language labels must wrap rather than stretch the field. */
+  overflow-wrap: anywhere;
+}
+
+/* Section headings carry the same treatment, on their own line. */
+.section-title-translations {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 400;
+  line-height: 1.35;
+  color: #64748b;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 480px) {
+  .multilingual-label .label-translations,
+  .section-title-translations {
+    font-size: 0.75rem;
+  }
+}
+

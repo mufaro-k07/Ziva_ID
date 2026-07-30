@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { signUp } from '../../lib/auth-client';
+import MultilingualLabel from '../../components/MultilingualLabel';
+import { multilingualLabels as L } from '../../constants/multilingualLabels';
 import '../../assets/auth.css';
 
 export function CitizenRegistration() {
@@ -58,7 +60,7 @@ export function CitizenRegistration() {
 
           <form onSubmit={handleRegister}>
             <div className="form-group">
-              <label htmlFor="fullName">Full Legal Name</label>
+              <MultilingualLabel htmlFor="fullName" labels={L.fullLegalName} required />
               <input
                 id="fullName"
                 type="text"
@@ -70,7 +72,7 @@ export function CitizenRegistration() {
             </div>
 
             <div className="form-group">
-              <label htmlFor="nationalId">National ID Number (if existing)</label>
+              <MultilingualLabel htmlFor="nationalId" labels={L.nationalIdNumber} />
               <input
                 id="nationalId"
                 type="text"
@@ -78,10 +80,11 @@ export function CitizenRegistration() {
                 value={nationalId}
                 onChange={(e) => setNationalId(e.target.value)}
               />
+              <small style={{ color: '#64748B' }}>Only if you already have one.</small>
             </div>
 
             <div className="form-group">
-              <label htmlFor="email">Email Address</label>
+              <MultilingualLabel htmlFor="email" labels={L.emailAddress} required />
               <input
                 id="email"
                 type="email"
@@ -93,7 +96,7 @@ export function CitizenRegistration() {
             </div>
 
             <div className="form-group">
-              <label htmlFor="password">Create Password</label>
+              <MultilingualLabel htmlFor="password" labels={L.createPassword} required />
               <input
                 id="password"
                 type="password"

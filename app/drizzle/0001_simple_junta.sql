@@ -1,0 +1,1 @@
+ALTER TABLE "intake_records" ADD COLUMN "district_code" text;

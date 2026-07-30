@@ -1,7 +1,22 @@
 // Shared vocabulary for intake records, mirroring app/src/db/schema.ts.
 // Keep these in sync with documentTypeEnum and statusEnum on the server.
 
-export const API_BASE = import.meta.env.VITE_BETTER_AUTH_URL || 'http://localhost:3000';
+// Base URL for ZivaID's own endpoints. Every API path lives under /api, so this
+// constant carries the /api segment and call sites append only the resource
+// (e.g. `${API_BASE}/citizen/intake`).
+//
+//  - Production: a RELATIVE "/api", so the frontend and API are same-origin.
+//    Same-origin means the session cookie is first-party and needs no
+//    cross-site cookie configuration.
+//  - Development: absolute, pointing at the local API on port 3000.
+//  - VITE_API_URL overrides both, for deployments that split the two origins.
+//
+// NOTE: this is NOT the Better Auth base URL. The auth client uses
+// VITE_BETTER_AUTH_URL and appends /api/auth itself — see src/lib/auth-client.ts.
+const AUTH_ORIGIN = import.meta.env.VITE_BETTER_AUTH_URL || 'http://localhost:3000';
+
+export const API_BASE =
+  import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '/api' : `${AUTH_ORIGIN}/api`);
 
 export const DOC_TYPE_LABELS = {
   national_id: 'National ID Card',

@@ -4,7 +4,10 @@ import { intakeRecords, checklistItems, statusLogs } from "../db/schema";
 import { eq, and } from "drizzle-orm";
 import { generateReferenceNumber } from "../lib/reference-number";
 
-export const citizenRoutes = new Elysia({ prefix: "/citizen" })
+// Prefixed "/api/citizen" so every ZivaID endpoint lives under /api, matching
+// Better Auth (which self-prefixes to /api/auth). That consistency is what lets
+// the frontend and API be served from a single origin behind one /api rewrite.
+export const citizenRoutes = new Elysia({ prefix: "/api/citizen" })
   // Submit a new intake form (FR5, FR7.1)
   .post(
     "/intake",
@@ -20,6 +23,7 @@ export const citizenRoutes = new Elysia({ prefix: "/citizen" })
           dateOfBirth: body.dateOfBirth,
           gender: body.gender,
           placeOfOrigin: body.placeOfOrigin,
+          districtCode: body.districtCode,
           details: JSON.stringify(body.details ?? {}),
           submittedByUserId: user.id,
         })
@@ -47,6 +51,15 @@ export const citizenRoutes = new Elysia({ prefix: "/citizen" })
     },
     {
       auth: true,
+      detail: {
+        tags: ["Citizen"],
+        summary: "Submit an intake record",
+        description:
+          "Creates an intake record, its checklist items, and an initial " +
+          "status log entry in one request. Returns the created record " +
+          "including its generated public reference number " +
+          "(format `ZID-{BC|NID}-{YEAR}-{6 digits}`).",
+      },
       body: t.Object({
         documentType: t.Union([
           t.Literal("national_id"),
@@ -56,6 +69,9 @@ export const citizenRoutes = new Elysia({ prefix: "/citizen" })
         dateOfBirth: t.String(),
         gender: t.String(),
         placeOfOrigin: t.String(),
+        // Two-digit registry district code; optional so older clients and
+        // partially-filled assisted intakes still validate.
+        districtCode: t.Optional(t.String()),
         details: t.Optional(t.Object({}, { additionalProperties: true })),
         checklist: t.Optional(
           t.Array(
@@ -78,7 +94,17 @@ export const citizenRoutes = new Elysia({ prefix: "/citizen" })
         .from(intakeRecords)
         .where(eq(intakeRecords.submittedByUserId, user.id));
     },
-    { auth: true }
+    {
+      auth: true,
+      detail: {
+        tags: ["Citizen"],
+        summary: "List own intake records",
+        description:
+          "Returns every intake record submitted by the authenticated citizen, " +
+          "scoped to their own user ID. Records belonging to other citizens are " +
+          "never included.",
+      },
+    }
   )
 
   // This is for a single record, 
@@ -99,5 +125,17 @@ export const citizenRoutes = new Elysia({ prefix: "/citizen" })
       if (!record) return status(404, { error: "Record not found" });
       return record;
     },
-    { auth: true }
+    {
+      auth: true,
+      detail: {
+        tags: ["Citizen"],
+        summary: "Get one own intake record",
+        description:
+          "Looks up a single record by its internal integer ID, scoped to the " +
+          "authenticated citizen. Requesting another citizen's record returns " +
+          "404 rather than 403, so the response does not reveal whether that " +
+          "record exists. Note this route uses the database ID, not the public " +
+          "reference number — the admin routes use the reference number.",
+      },
+    }
   );
