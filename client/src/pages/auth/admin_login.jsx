@@ -1,15 +1,37 @@
-// src/pages/auth/admin_login.jsx
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { signIn } from '../../lib/auth-client';
 import '../../assets/auth.css';
 
 export function AdminLogin() {
   const [officerId, setOfficerId] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleAdminLogin = (e) => {
+  const handleAdminLogin = async (e) => {
     e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    const { data, error: signInError } = await signIn.email({
+      email: officerId,
+      password,
+    });
+
+    setLoading(false);
+
+    if (signInError) {
+      setError(signInError.message || 'Invalid credentials.');
+      return;
+    }
+
+    if (data.user.role !== 'admin') {
+      setError('This account does not have administrator access.');
+      return;
+    }
+
     navigate('/admin/dashboard');
   };
 
@@ -33,6 +55,8 @@ export function AdminLogin() {
         <div className="auth-card admin-card">
           <h2 className="auth-title">Civic Officer Login</h2>
           <p className="auth-subtitle">Enter your official Staff Email / Officer ID and secure password.</p>
+
+          {error && <p className="auth-error">{error}</p>}
 
           <form onSubmit={handleAdminLogin}>
             <div className="form-group">
@@ -59,8 +83,8 @@ export function AdminLogin() {
               />
             </div>
 
-            <button type="submit" className="btn btn-admin">
-              Authenticate Officer Session
+            <button type="submit" className="btn btn-admin" disabled={loading}>
+              {loading ? 'Authenticating…' : 'Authenticate Officer Session'}
             </button>
           </form>
 

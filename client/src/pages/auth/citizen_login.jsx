@@ -1,15 +1,29 @@
-// src/pages/auth/citizen_login.jsx
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { signIn } from '../../lib/auth-client';
 import '../../assets/auth.css';
 
 export function CitizenLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    const { error: signInError } = await signIn.email({ email, password });
+
+    setLoading(false);
+
+    if (signInError) {
+      setError(signInError.message || 'Invalid email or password.');
+      return;
+    }
+
     navigate('/citizen/dashboard');
   };
 
@@ -34,13 +48,15 @@ export function CitizenLogin() {
           <h2 className="auth-title">Citizen Login</h2>
           <p className="auth-subtitle">Enter your registered email and password to access your dashboard.</p>
 
+          {error && <p className="auth-error">{error}</p>}
+
           <form onSubmit={handleLogin}>
             <div className="form-group">
               <label htmlFor="email">Email Address</label>
               <input
                 id="email"
                 type="email"
-                placeholder="citizen@example.co.zw"
+                placeholder="citizen@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -59,8 +75,8 @@ export function CitizenLogin() {
               />
             </div>
 
-            <button type="submit" className="btn btn-primary">
-              Log In to Dashboard
+            <button type="submit" className="btn btn-primary" disabled={loading}>
+              {loading ? 'Logging in…' : 'Log In to Dashboard'}
             </button>
           </form>
 

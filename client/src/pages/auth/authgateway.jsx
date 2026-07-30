@@ -1,4 +1,3 @@
-// src/pages/auth/authgateway.jsx
 import { Link } from 'react-router-dom';
 import '../../assets/auth.css';
 

@@ -1,6 +1,6 @@
-// src/pages/auth/citizen_registration.jsx
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { signUp } from '../../lib/auth-client';
 import '../../assets/auth.css';
 
 export function CitizenRegistration() {
@@ -8,10 +8,28 @@ export function CitizenRegistration() {
   const [nationalId, setNationalId] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    const { error: signUpError } = await signUp.email({
+      email,
+      password,
+      name: fullName,
+    });
+
+    setLoading(false);
+
+    if (signUpError) {
+      setError(signUpError.message || 'Registration failed. Please try again.');
+      return;
+    }
+
     navigate('/citizen/dashboard');
   };
 
@@ -33,7 +51,9 @@ export function CitizenRegistration() {
       <div className="auth-main">
         <div className="auth-card">
           <h2 className="auth-title">Citizen Registration</h2>
-          <p className="auth-subtitle">Fill in your details below to establish your secure citizen profile.</p>
+          <p className="auth-subtitle">Fill in your details below to create your secure citizen profile.</p>
+
+          {error && <p className="auth-error">{error}</p>}
 
           <form onSubmit={handleRegister}>
             <div className="form-group">
@@ -41,7 +61,7 @@ export function CitizenRegistration() {
               <input
                 id="fullName"
                 type="text"
-                placeholder="e.g. Mufaro Moyo"
+                placeholder="Mufaro Moyo"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 required
@@ -64,7 +84,7 @@ export function CitizenRegistration() {
               <input
                 id="email"
                 type="email"
-                placeholder="citizen@example.co.zw"
+                placeholder="citizen@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -83,8 +103,8 @@ export function CitizenRegistration() {
               />
             </div>
 
-            <button type="submit" className="btn btn-primary">
-              Create ZivaID Account
+            <button type="submit" className="btn btn-primary" disabled={loading}>
+              {loading ? 'Creating Account…' : 'Create ZivaID Account'}
             </button>
           </form>
 
