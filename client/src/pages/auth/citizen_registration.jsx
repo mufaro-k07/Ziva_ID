@@ -21,6 +21,7 @@ export function CitizenRegistration() {
       email,
       password,
       name: fullName,
+      nationalID: nationalId || undefined, 
     });
 
     setLoading(false);

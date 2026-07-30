@@ -1,9 +1,10 @@
 // src/pages/citizen/CitizenDashboard.jsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSession, signOut } from '../../lib/auth-client';
 import '../../assets/dashboard.css';
 
-/* --- Inline SVG Icon Helpers (Swap for Lucide easily later) --- */
+/* Including Icons*/
 const IconHome = () => (
   <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
     <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
@@ -41,13 +42,63 @@ const IconLogOut = () => (
   </svg>
 );
 
+const DOC_TYPE_LABELS = {
+  national_id: "National ID Card",
+  birth_certificate: "Birth Certificate",
+};
+
+const STATUS_DISPLAY = {
+  submitted: { label: "Submitted", badgeClass: "status-processing" },
+  under_review: { label: "Under Review", badgeClass: "status-processing" },
+  missing_information: { label: "Missing Information", badgeClass: "status-processing" },
+  ready_for_registry_visit: { label: "Ready for Registry Visit", badgeClass: "status-verified" },
+  closed: { label: "Closed", badgeClass: "status-verified" },
+};
+
+const API_BASE = import.meta.env.VITE_BETTER_AUTH_URL;
+
 export function CitizenDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
   const navigate = useNavigate();
+  const { data: session, isPending: sessionLoading } = useSession();
 
-  // Mock citizen data matching your screenshots
-  const citizenName = "Mufaro Moyo";
-  const nationalIdNumber = "63-2345678-F-42";
+  const [applications, setApplications] = useState([]);
+  const [loadingApps, setLoadingApps] = useState(true);
+  const [fetchError, setFetchError] = useState('');
+
+  useEffect(() => {
+    async function fetchIntakeRecords() {
+      try {
+        const res = await fetch(`${API_BASE}/citizen/intake`, {
+          credentials: 'include', // sends the session cookie
+        });
+
+        if (!res.ok) {
+          throw new Error('Failed to load applications');
+        }
+
+        const data = await res.json();
+        setApplications(data);
+      } catch (err) {
+        setFetchError(err.message);
+      } finally {
+        setLoadingApps(false);
+      }
+    }
+
+    if (session) {
+      fetchIntakeRecords();
+    }
+  }, [session]);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
+
+  if (sessionLoading) return <p>Loading...</p>;
+
+  const citizenName = session?.user?.name || 'Citizen';
 
   // Document application cards
   const civicDocuments = [
@@ -60,40 +111,36 @@ export function CitizenDashboard() {
       btnType: "btn-green",
       action: () => navigate('/citizen/apply/birth')
     },
-    {
-      id: "national-id",
-      title: "National ID Card",
-      desc: "First-time registration, replacement of lost ID, or details change.",
-      status: "Available",
-      btnText: "Apply Now",
-      btnType: "btn-green",
-      action: () => navigate('/citizen/apply/id')
-    },
-    {
-      id: "passport",
-      title: "e-Passport",
-      desc: "Ordinary or Emergency electronic passport application.",
-      status: "Requires ID",
-      btnText: "Check Requirements",
-      btnType: "btn-outline",
-      action: () => alert("Please verify your National ID record first.")
-    },
-    {
-      id: "driver",
-      title: "Driver's License",
-      desc: "Provisional licence testing booking or permanent card upgrade.",
-      status: "Available",
-      btnText: "Apply Now",
-      btnType: "btn-green",
-      action: () => alert("Driver licensing module opening soon.")
-    }
+    // Passports and Driver's license have been commented out for now because they are outside my current project scope
+    // {
+    //   id: "national-id",
+    //   title: "National ID Card",
+    //   desc: "First-time registration, replacement of lost ID, or details change.",
+    //   status: "Available",
+    //   btnText: "Apply Now",
+    //   btnType: "btn-green",
+    //   action: () => navigate('/citizen/apply/id')
+    // },
+    // {
+    //   id: "passport",
+    //   title: "e-Passport",
+    //   desc: "Ordinary or Emergency electronic passport application.",
+    //   status: "Requires ID",
+    //   btnText: "Check Requirements",
+    //   btnType: "btn-outline",
+    //   action: () => alert("Please verify your National ID record first.")
+    // },
+    // {
+    //   id: "driver",
+    //   title: "Driver's License",
+    //   desc: "Provisional licence testing booking or permanent card upgrade.",
+    //   status: "Available",
+    //   btnText: "Apply Now",
+    //   btnType: "btn-green",
+    //   action: () => alert("Driver licensing module opening soon.")
+    // }
   ];
 
-  // Tracking history rows
-  const myApplications = [
-    { ticket: "ZIV-2026-8841", doc: "Birth Certificate (Certified Copy)", date: "24 Jul 2026", status: "Verified", badgeClass: "status-verified" },
-    { ticket: "ZIV-2026-9012", doc: "National ID Card Replacement", date: "28 Jul 2026", status: "Processing", badgeClass: "status-processing" }
-  ];
 
   return (
     <div className="dashboard-container">
@@ -162,15 +209,18 @@ export function CitizenDashboard() {
           </div>
 
           <div className="profile-badge">
-            <div className="avatar-circle">MM</div>
+            <div className="avatar-circle">{citizenName.slice(0, 2).toUpperCase()}</div>
             <div>
               <div style={{ fontSize: '14px', fontWeight: '600' }}>{citizenName}</div>
-              <div style={{ fontSize: '12px', color: '#64748B' }}>ID: {nationalIdNumber}</div>
+              <div style={{ fontSize: '12px', color: '#64748B' }}>
+                {session?.user?.nationalID
+                  ? `ID: ${session.user.nationalID}`
+                  : session?.user?.email}
+              </div>
             </div>
           </div>
         </header>
 
-        {/* Dynamic Body Content */}
         <div className="dashboard-content">
           {/* Welcome Context Banner */}
           <section className="welcome-banner">
@@ -179,7 +229,11 @@ export function CitizenDashboard() {
               <p>Select a civic service below to start a new application or track your existing ticket numbers.</p>
             </div>
             <button className="btn-card btn-green" style={{ width: 'auto', padding: '10px 20px' }}>
-              + New Application
+              {/* add icon here */}
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+               New Application
             </button>
           </section>
 
@@ -214,36 +268,57 @@ export function CitizenDashboard() {
             </div>
           </section>
 
-          {/* Active Application History Table */}
+          {/* Application History Table */}
           <section className="table-card">
             <div className="table-header">
               <h2>Recent Applications & Status History</h2>
-              <span style={{ fontSize: '13px', color: '#64748B' }}>Showing recent tickets</span>
+              <span style={{ fontSize: '13px', color: '#64748B' }}>
+                {loadingApps ? 'Loading...' : `${applications.length} record(s)`}
+              </span>
             </div>
-            <table className="history-table">
-              <thead>
-                <tr>
-                  <th>Ticket Number</th>
-                  <th>Document Type</th>
-                  <th>Submission Date</th>
-                  <th>Current Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {myApplications.map((row) => (
-                  <tr key={row.ticket}>
-                    <td style={{ fontWeight: '600' }}>{row.ticket}</td>
-                    <td>{row.doc}</td>
-                    <td>{row.date}</td>
-                    <td>
-                      <span className={`status-badge ${row.badgeClass}`}>
-                        {row.status}
-                      </span>
-                    </td>
+
+            {fetchError && (
+              <p style={{ color: '#b91c1c', padding: '12px 0' }}>{fetchError}</p>
+            )}
+
+            {!loadingApps && !fetchError && applications.length === 0 && (
+              <p style={{ color: '#64748B', padding: '20px 0' }}>
+                You haven't submitted any applications yet.
+              </p>
+            )}
+
+            {!loadingApps && applications.length > 0 && (
+              <table className="history-table">
+                <thead>
+                  <tr>
+                    <th>Reference Number</th>
+                    <th>Document Type</th>
+                    <th>Submission Date</th>
+                    <th>Current Status</th>
                   </tr>
-                ))}
+                </thead>
+                <tbody>
+                  {applications.map((row) => {
+                      const statusInfo = STATUS_DISPLAY[row.status] || {
+                        label: row.status,
+                        badgeClass: "status-processing",
+                      };
+                      return (
+                        <tr key={row.id}>
+                          <td style={{ fontWeight: '600' }}>{row.referenceNumber}</td>
+                          <td>{DOC_TYPE_LABELS[row.documentType] || row.documentType}</td>
+                          <td>{new Date(row.createdAt).toLocaleDateString()}</td>
+                          <td>
+                            <span className={`status-badge ${statusInfo.badgeClass}`}>
+                              {statusInfo.label}
+                        </span>
+                      </td>
+                    </tr>
+                    );
+              })}
               </tbody>
             </table>
+            )}
           </section>
         </div>
       </main>
