@@ -1,6 +1,16 @@
 // src/pages/admin/AdminDashboard.jsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSession, signOut } from '../../lib/auth-client';
+import {
+  API_BASE,
+  DOC_TYPE_LABELS,
+  statusLabel,
+  statusColor,
+  docTypeLabel,
+  submissionTier,
+  formatDate,
+} from '../../utils/records';
 import '../../assets/admin.css';
 
 /* --- Inline SVG Icons */
@@ -40,68 +50,58 @@ export function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('queue');
   const [filterType, setFilterType] = useState('ALL');
   const navigate = useNavigate();
+  const { data: session } = useSession();
 
-  // Mock staff Active Directory identity
-  const officerName = "Officer P. Kunze";
-  const officerId = "RG-HARARE-042";
+  const officerName = session?.user?.name || 'Officer';
+  const officerEmail = session?.user?.email || '—';
+  const officerInitials = officerName.slice(0, 2).toUpperCase();
 
-  // Initial Review Queue state matching your screenshots
-  const [applications, setApplications] = useState([
-    {
-      id: "ZIV-2026-8841",
-      citizen: "Mufaro Moyo",
-      nationalId: "63-2345678-F-42",
-      docType: "Birth Certificate",
-      submitted: "28 Jul 2026",
-      status: "verified",
-      type: "Self-Service"
-    },
-    {
-      id: "ZIV-2026-8890",
-      citizen: "Tendai Chiwenga",
-      nationalId: "08-1122334-X-12",
-      docType: "National ID Card",
-      submitted: "29 Jul 2026",
-      status: "pending",
-      type: "Assisted Citizen"
-    },
-    {
-      id: "ZIV-2026-8912",
-      citizen: "Chipo Ndlovu",
-      nationalId: "75-9988776-Q-04",
-      docType: "Birth Certificate",
-      submitted: "29 Jul 2026",
-      status: "pending",
-      type: "Self-Service"
-    },
-    {
-      id: "ZIV-2026-8945",
-      citizen: "Farai Gumbura",
-      nationalId: "N/A (First ID)",
-      docType: "National ID Card",
-      submitted: "29 Jul 2026",
-      status: "rejected",
-      type: "Assisted Citizen"
+  const [applications, setApplications] = useState([]);
+  const [loadingApps, setLoadingApps] = useState(true);
+  const [fetchError, setFetchError] = useState('');
+
+  useEffect(() => {
+    async function fetchIntakes() {
+      setFetchError('');
+      try {
+        const res = await fetch(`${API_BASE}/admin/intakes`, {
+          credentials: 'include', // sends the officer's session cookie
+        });
+
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body.error || 'Failed to load the review queue.');
+        }
+
+        setApplications(await res.json());
+      } catch (err) {
+        setFetchError(err.message);
+      } finally {
+        setLoadingApps(false);
+      }
     }
-  ]);
 
-  // Handle status updates from the officer dropdown
-  const handleStatusChange = (ticketId, newStatus) => {
-    setApplications(prev =>
-      prev.map(app => (app.id === ticketId ? { ...app, status: newStatus } : app))
-    );
+    fetchIntakes();
+  }, []);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
   };
 
-  // Handle new assisted citizen registration submission
+  // Assisted-intake capture is not yet backed by a server endpoint.
   const handleIntakeSubmit = (e) => {
     e.preventDefault();
-    alert("Assisted Citizen Record Captured & Routed to Civil Registry Database!");
-    setActiveTab('queue');
+    alert('Assisted intake is not yet connected to the registry database.');
   };
 
-  const filteredApps = filterType === 'ALL' 
-    ? applications 
-    : applications.filter(app => app.docType === filterType);
+  const filteredApps =
+    filterType === 'ALL'
+      ? applications
+      : applications.filter((app) => app.documentType === filterType);
+
+  const countByStatus = (...statuses) =>
+    applications.filter((app) => statuses.includes(app.status)).length;
 
   return (
     <div className="admin-container">
@@ -113,7 +113,7 @@ export function AdminDashboard() {
         </div>
 
         <nav className="admin-nav">
-          <button 
+          <button
             className={`admin-nav-item ${activeTab === 'queue' ? 'active' : ''}`}
             onClick={() => setActiveTab('queue')}
           >
@@ -121,7 +121,7 @@ export function AdminDashboard() {
             <span>Review Queue</span>
           </button>
 
-          <button 
+          <button
             className={`admin-nav-item ${activeTab === 'intake' ? 'active' : ''}`}
             onClick={() => setActiveTab('intake')}
           >
@@ -129,7 +129,7 @@ export function AdminDashboard() {
             <span>Assisted Citizen Intake</span>
           </button>
 
-          <button 
+          <button
             className={`admin-nav-item ${activeTab === 'audit' ? 'active' : ''}`}
             onClick={() => setActiveTab('audit')}
           >
@@ -137,7 +137,7 @@ export function AdminDashboard() {
             <span>Audit Logs & Security</span>
           </button>
 
-          <button 
+          <button
             className={`admin-nav-item ${activeTab === 'profile' ? 'active' : ''}`}
             onClick={() => setActiveTab('profile')}
           >
@@ -147,7 +147,7 @@ export function AdminDashboard() {
         </nav>
 
         <div className="admin-sidebar-footer">
-          <button className="admin-nav-item" onClick={() => navigate('/')}>
+          <button className="admin-nav-item" onClick={handleSignOut}>
             <IconLogOut />
             <span>Terminate Session</span>
           </button>
@@ -166,17 +166,17 @@ export function AdminDashboard() {
           </div>
 
           <div style={{ fontWeight: '700', fontSize: '18px', color: '#0F172A' }}>
-            {activeTab === 'queue' && "Civic Document Verification Queue"}
-            {activeTab === 'intake' && "Assisted Citizen Registration (Walk-In Portal)"}
-            {activeTab === 'audit' && "Government Security & Action Audit Trail"}
-            {activeTab === 'profile' && "Active Directory Officer Credentials"}
+            {activeTab === 'queue' && 'Civic Document Verification Queue'}
+            {activeTab === 'intake' && 'Assisted Citizen Registration (Walk-In Portal)'}
+            {activeTab === 'audit' && 'Government Security & Action Audit Trail'}
+            {activeTab === 'profile' && 'Officer Session Credentials'}
           </div>
 
           <div className="admin-profile-badge">
-            <div className="admin-avatar">PK</div>
+            <div className="admin-avatar">{officerInitials}</div>
             <div>
               <div style={{ fontSize: '14px', fontWeight: '600' }}>{officerName}</div>
-              <div style={{ fontSize: '12px', color: '#64748B' }}>Station: {officerId}</div>
+              <div style={{ fontSize: '12px', color: '#64748B' }}>{officerEmail}</div>
             </div>
           </div>
         </header>
@@ -189,31 +189,25 @@ export function AdminDashboard() {
               {/* System Metrics Ribbon */}
               <div className="metrics-grid">
                 <div className="metric-card">
-                  <span className="metric-title">Pending Verification</span>
-                  <span className="metric-value">
-                    {applications.filter(a => a.status === 'pending').length}
-                  </span>
+                  <span className="metric-title">Awaiting Review</span>
+                  <span className="metric-value">{countByStatus('submitted', 'under_review')}</span>
                   <span className="metric-sub">Requires Officer Review</span>
                 </div>
                 <div className="metric-card">
-                  <span className="metric-title">Verified Today</span>
-                  <span className="metric-value">
-                    {applications.filter(a => a.status === 'verified').length}
-                  </span>
-                  <span className="metric-sub">Approved & Signed</span>
+                  <span className="metric-title">Ready for Registry Visit</span>
+                  <span className="metric-value">{countByStatus('ready_for_registry_visit')}</span>
+                  <span className="metric-sub">Cleared &amp; Awaiting Collection</span>
                 </div>
                 <div className="metric-card">
                   <span className="metric-title">Assisted Intakes</span>
                   <span className="metric-value">
-                    {applications.filter(a => a.type === 'Assisted Citizen').length}
+                    {applications.filter((a) => a.isAdminAssisted).length}
                   </span>
                   <span className="metric-sub" style={{ color: '#0369A1' }}>Walk-in Registrations</span>
                 </div>
                 <div className="metric-card">
-                  <span className="metric-title">Flagged / Rejected</span>
-                  <span className="metric-value">
-                    {applications.filter(a => a.status === 'rejected').length}
-                  </span>
+                  <span className="metric-title">Missing Information</span>
+                  <span className="metric-value">{countByStatus('missing_information')}</span>
                   <span className="metric-sub" style={{ color: '#DC2626' }}>Discrepancies Found</span>
                 </div>
               </div>
@@ -223,72 +217,95 @@ export function AdminDashboard() {
                 <div className="admin-card-header">
                   <h2>Active Document Submission Records</h2>
                   <div className="filter-bar">
-                    <select 
+                    <select
                       className="filter-select"
                       value={filterType}
                       onChange={(e) => setFilterType(e.target.value)}
                     >
                       <option value="ALL">All Documents</option>
-                      <option value="Birth Certificate">Birth Certificates</option>
-                      <option value="National ID Card">National IDs</option>
+                      {Object.entries(DOC_TYPE_LABELS).map(([value, label]) => (
+                        <option key={value} value={value}>{label}</option>
+                      ))}
                     </select>
                   </div>
                 </div>
 
-                <table className="admin-table">
-                  <thead>
-                    <tr>
-                      <th>Ticket ID</th>
-                      <th>Citizen Legal Name</th>
-                      <th>National ID / Reg #</th>
-                      <th>Document Type</th>
-                      <th>Submission Tier</th>
-                      <th>Verification Status</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredApps.map((app) => (
-                      <tr key={app.id}>
-                        <td style={{ fontWeight: '600' }}>{app.id}</td>
-                        <td>{app.citizen}</td>
-                        <td style={{ color: '#64748B' }}>{app.nationalId}</td>
-                        <td>{app.docType}</td>
-                        <td>
-                          <span style={{
-                            padding: '3px 8px',
-                            borderRadius: '12px',
-                            fontSize: '11px',
-                            fontWeight: '600',
-                            background: app.type === 'Assisted Citizen' ? '#E0F2FE' : '#F1F5F9',
-                            color: app.type === 'Assisted Citizen' ? '#0369A1' : '#475569'
-                          }}>
-                            {app.type}
-                          </span>
-                        </td>
-                        <td>
-                          <select
-                            className={`status-select ${app.status}`}
-                            value={app.status}
-                            onChange={(e) => handleStatusChange(app.id, e.target.value)}
-                          >
-                            <option value="pending">PENDING</option>
-                            <option value="verified">VERIFIED</option>
-                            <option value="rejected">REJECTED</option>
-                          </select>
-                        </td>
-                        <td>
-                          <button 
-                            className="btn-action"
-                            onClick={() => navigate(`/admin/review/${app.id}`)}
-                          >
-                            Inspect Record
-                          </button>
-                        </td>
+                {loadingApps && <p style={{ padding: '20px 0', color: '#64748B' }}>Loading review queue…</p>}
+
+                {fetchError && (
+                  <p style={{ color: '#B91C1C', padding: '12px 0', fontWeight: '600' }}>{fetchError}</p>
+                )}
+
+                {!loadingApps && !fetchError && filteredApps.length === 0 && (
+                  <p style={{ padding: '20px 0', color: '#64748B' }}>
+                    No intake records in the queue yet.
+                  </p>
+                )}
+
+                {!loadingApps && !fetchError && filteredApps.length > 0 && (
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th>Reference Number</th>
+                        <th>Citizen Legal Name</th>
+                        <th>Document Type</th>
+                        <th>Submitted</th>
+                        <th>Submission Tier</th>
+                        <th>Verification Status</th>
+                        <th>Action</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {filteredApps.map((app) => {
+                        const badge = statusColor(app.status);
+                        const tier = submissionTier(app);
+                        return (
+                          <tr key={app.id}>
+                            <td style={{ fontWeight: '600' }}>{app.referenceNumber}</td>
+                            <td>{app.fullName}</td>
+                            <td>{docTypeLabel(app.documentType)}</td>
+                            <td style={{ color: '#64748B' }}>{formatDate(app.createdAt)}</td>
+                            <td>
+                              <span style={{
+                                padding: '3px 8px',
+                                borderRadius: '12px',
+                                fontSize: '11px',
+                                fontWeight: '600',
+                                background: tier === 'Assisted Citizen' ? '#E0F2FE' : '#F1F5F9',
+                                color: tier === 'Assisted Citizen' ? '#0369A1' : '#475569',
+                              }}>
+                                {tier}
+                              </span>
+                            </td>
+                            <td>
+                              {/* Read-only here: a status change requires an officer
+                                  remark, so adjudication happens on the review page. */}
+                              <span style={{
+                                padding: '3px 8px',
+                                borderRadius: '12px',
+                                fontSize: '11px',
+                                fontWeight: '700',
+                                textTransform: 'uppercase',
+                                background: badge.background,
+                                color: badge.color,
+                              }}>
+                                {statusLabel(app.status)}
+                              </span>
+                            </td>
+                            <td>
+                              <button
+                                className="btn-action"
+                                onClick={() => navigate(`/admin/review/${encodeURIComponent(app.referenceNumber)}`)}
+                              >
+                                Inspect Record
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                )}
               </section>
             </>
           )}
@@ -301,6 +318,9 @@ export function AdminDashboard() {
                   <h2>Assisted Citizen Walk-In Registration</h2>
                   <p style={{ fontSize: '13px', color: '#64748B', marginTop: '4px' }}>
                     Capture records for citizens without email accounts or digital literacy. No password required.
+                  </p>
+                  <p style={{ fontSize: '13px', color: '#B45309', marginTop: '8px', fontWeight: '600' }}>
+                    Not yet connected to the registry database — no server endpoint exists for assisted intake.
                   </p>
                 </div>
               </div>
@@ -315,8 +335,8 @@ export function AdminDashboard() {
                   <div className="form-field">
                     <label>Document Service Type</label>
                     <select required>
-                      <option value="birth">Birth Certificate (First Issue or Copy)</option>
-                      <option value="id">National ID Card Registration</option>
+                      <option value="birth_certificate">Birth Certificate (First Issue or Copy)</option>
+                      <option value="national_id">National ID Card Registration</option>
                     </select>
                   </div>
 
@@ -343,8 +363,8 @@ export function AdminDashboard() {
 
                   <div className="form-field full-width">
                     <label>Officer Audit Notes & Supporting Documents Verified</label>
-                    <textarea 
-                      rows="3" 
+                    <textarea
+                      rows="3"
                       placeholder="List physical documents presented (e.g., Parent National IDs, Hospital Birth Record)..."
                     ></textarea>
                   </div>
@@ -369,19 +389,20 @@ export function AdminDashboard() {
                 System Audit Trail & Anti-Corruption Logs
               </h3>
               <p style={{ color: '#64748B', marginTop: '8px' }}>
-                All status modifications and assisted intakes by {officerName} are logged with immutable timestamps.
+                Every status change is written to the immutable status log. Open a record from the
+                review queue to read its full adjudication history.
               </p>
             </section>
           )}
 
-          {/* TAB 4: OFFICER SESSION PLACEHOLDER */}
+          {/* TAB 4: OFFICER SESSION */}
           {activeTab === 'profile' && (
             <section className="admin-card" style={{ padding: '32px', textAlign: 'center' }}>
               <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#0F172A' }}>
-                Active Directory Staff Profile
+                Officer Session Details
               </h3>
               <p style={{ color: '#64748B', marginTop: '8px' }}>
-                Logged in as Officer ID: {officerId} | Security Clearance Level: Senior Registrar
+                Signed in as {officerName} ({officerEmail}) — Role: {session?.user?.role || 'unknown'}
               </p>
             </section>
           )}

@@ -1,10 +1,3 @@
-/* src/assets/admin.css */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
 body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background-color: var(--slate-100, #f1f5f9);
@@ -17,10 +10,9 @@ body {
   width: 100%;
 }
 
-/* --- Dark Sidebar with Red Civic Officer Identity --- */
 .admin-sidebar {
   width: 260px;
-  background-color: #18181b; /* Slightly darker/warmer zinc tone for Admin */
+  background-color: #18181b;
   color: #ffffff;
   display: flex;
   flex-direction: column;
@@ -93,7 +85,6 @@ body {
   border-top: 1px solid #27272a;
 }
 
-/* --- Main Content Layout --- */
 .admin-main {
   flex: 1;
   display: flex;
@@ -112,7 +103,6 @@ body {
   position: relative;
 }
 
-/* --- Top Bar Flag Accent --- */
 .flag-bar-top {
   position: absolute;
   top: 0;
@@ -151,9 +141,11 @@ body {
   display: flex;
   flex-direction: column;
   gap: 28px;
+  max-width: 1300px;
+  margin: 0 auto;
+  width: 100%;
 }
 
-/* --- System Metrics Ribbon --- */
 .metrics-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -171,7 +163,7 @@ body {
 }
 
 .metric-title {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   color: #64748b;
   text-transform: uppercase;
@@ -190,12 +182,12 @@ body {
   font-weight: 600;
 }
 
-/* --- Tables & Cards --- */
 .admin-card {
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
   overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04);
 }
 
 .admin-card-header {
@@ -211,18 +203,14 @@ body {
   font-weight: 700;
 }
 
-.filter-bar {
-  display: flex;
-  gap: 10px;
-}
-
 .filter-select {
-  padding: 6px 12px;
+  padding: 8px 14px;
   border: 1px solid #cbd5e1;
   border-radius: 6px;
   font-size: 13px;
   outline: none;
   background: #ffffff;
+  color: #0f172a;
 }
 
 .admin-table {
@@ -253,9 +241,8 @@ body {
   border-bottom: none;
 }
 
-/* --- Action & Status Controls --- */
 .status-select {
-  padding: 6px 10px;
+  padding: 6px 12px;
   border-radius: 6px;
   font-size: 12px;
   font-weight: 700;
@@ -269,7 +256,7 @@ body {
 .status-select.rejected { background: #fee2e2; color: #991b1b; }
 
 .btn-action {
-  padding: 6px 12px;
+  padding: 8px 14px;
   border-radius: 6px;
   font-size: 12px;
   font-weight: 600;
@@ -280,11 +267,10 @@ body {
 }
 
 .btn-action:hover {
-  background: #f1f5f9;
+  background: #f8fafc;
   border-color: #94a3b8;
 }
 
-/* --- Assisted Intake Form --- */
 .intake-form-grid {
   padding: 24px;
   display: grid;
@@ -311,17 +297,19 @@ body {
 .form-field input,
 .form-field select,
 .form-field textarea {
-  padding: 10px 14px;
+  padding: 12px 14px;
   border: 1px solid #cbd5e1;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 14px;
   outline: none;
+  background: #ffffff;
 }
 
 .form-field input:focus,
-.form-field select:focus {
+.form-field select:focus,
+.form-field textarea:focus {
   border-color: var(--zim-red, #ce1126);
-  box-shadow: 0 0 0 3px rgba(206, 17, 38, 0.1);
+  box-shadow: 0 0 0 3px rgba(206, 17, 38, 0.12);
 }
 
 .form-actions {

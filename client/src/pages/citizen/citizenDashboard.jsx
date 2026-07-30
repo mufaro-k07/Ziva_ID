@@ -1,4 +1,3 @@
-// src/pages/citizen/CitizenDashboard.jsx
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSession, signOut } from '../../lib/auth-client';
@@ -6,39 +5,33 @@ import '../../assets/dashboard.css';
 
 /* Including Icons*/
 const IconHome = () => (
-  <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-    <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" style={{ width: 20, height: 20 }}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
   </svg>
 );
 const IconFileText = () => (
-  <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-    <polyline points="14 2 14 8 20 8" />
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" style={{ width: 20, height: 20 }}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
   </svg>
 );
 const IconClock = () => (
-  <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-    <circle cx="12" cy="12" r="10" />
-    <polyline points="12 6 12 12 16 14" />
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" style={{ width: 20, height: 20 }}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
   </svg>
 );
 const IconUser = () => (
-  <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
-    <circle cx="12" cy="7" r="4" />
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" style={{ width: 20, height: 20 }}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
   </svg>
 );
 const IconSearch = () => (
-  <svg width="16" height="16" fill="none" stroke="#64748B" strokeWidth="2" viewBox="0 0 24 24">
-    <circle cx="11" cy="11" r="8" />
-    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" style={{ width: 20, height: 20 }}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
   </svg>
 );
 const IconLogOut = () => (
-  <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-    <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
-    <polyline points="16 17 21 12 16 7" />
-    <line x1="21" y1="12" x2="9" y2="12" />
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" style={{ width: 20, height: 20 }}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15m-3 0-3-3m0 0 3-3m-3 3H15" />
   </svg>
 );
 
@@ -55,7 +48,7 @@ const STATUS_DISPLAY = {
   closed: { label: "Closed", badgeClass: "status-verified" },
 };
 
-const API_BASE = import.meta.env.VITE_BETTER_AUTH_URL;
+const API_BASE = import.meta.env.VITE_BETTER_AUTH_URL || "http://localhost:3000"; 
 
 export function CitizenDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -96,7 +89,15 @@ export function CitizenDashboard() {
     navigate('/');
   };
 
-  if (sessionLoading) return <p>Loading...</p>;
+  const scrollToSection = (id, tabName) => {
+    setActiveTab(tabName);
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  if (sessionLoading) return <p style={{ padding: '40px' }}>Loading...</p>;
 
   const citizenName = session?.user?.name || 'Citizen';
 
@@ -121,7 +122,7 @@ export function CitizenDashboard() {
         action: () => navigate('/citizen/apply/id')
       },
 
-      
+
       // Passports and Driver's license have been commented out for now because they are outside my current project scope
       // {
     //   id: "passport",
@@ -155,7 +156,7 @@ export function CitizenDashboard() {
         <nav className="sidebar-nav">
           <button 
             className={`nav-item ${activeTab === 'overview' ? 'active' : ''}`}
-            onClick={() => setActiveTab('overview')}
+            onClick={() => scrollToSection('overview', 'overview')}
           >
             <IconHome />
             <span>Dashboard</span>
@@ -163,7 +164,7 @@ export function CitizenDashboard() {
 
           <button 
             className={`nav-item ${activeTab === 'applications' ? 'active' : ''}`}
-            onClick={() => setActiveTab('applications')}
+            onClick={() => scrollToSection('applications', 'applications')}
           >
             <IconFileText />
             <span>My Documents</span>
@@ -171,7 +172,7 @@ export function CitizenDashboard() {
 
           <button 
             className={`nav-item ${activeTab === 'history' ? 'active' : ''}`}
-            onClick={() => setActiveTab('history')}
+            onClick={() => scrollToSection('history', 'history')}
           >
             <IconClock />
             <span>Status Tracker</span>
@@ -179,7 +180,7 @@ export function CitizenDashboard() {
 
           <button 
             className={`nav-item ${activeTab === 'profile' ? 'active' : ''}`}
-            onClick={() => setActiveTab('profile')}
+            onClick={() => scrollToSection('profile', 'profile')}
           >
             <IconUser />
             <span>Profile & Security</span>
@@ -187,7 +188,7 @@ export function CitizenDashboard() {
         </nav>
 
         <div className="sidebar-footer">
-          <button className="nav-item" onClick={() => navigate('/')}>
+          <button className="nav-item" onClick={handleSignOut}>
             <IconLogOut />
             <span>Sign Out</span>
           </button>
@@ -230,24 +231,27 @@ export function CitizenDashboard() {
               <h1>Welcome back, {citizenName}</h1>
               <p>Select a civic service below to start a new application or track your existing ticket numbers.</p>
             </div>
-            <button className="btn-card btn-green" style={{ width: 'auto', padding: '10px 20px' }}>
-              {/* add icon here */}
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            <button 
+              className="btn-card btn-green" 
+              style={{ width: 'auto', padding: '10px 20px', display: 'flex', alignItems: 'center', gap: '8px' }}
+              onClick={() => scrollToSection('applications', 'applications')}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" style={{ width: 18, height: 18 }}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
               </svg>
                New Application
             </button>
           </section>
 
           {/* Civic Documents Grid */}
-          <section>
+          <section id="applications">
             <h2 className="section-title">Government Document Services</h2>
-            <div className="document-grid">
+            <div className="document-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
               {civicDocuments.map((doc) => (
-                <div key={doc.id} className="doc-card">
+                <div key={doc.id} className="table-card doc-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '20px' }}>
                   <div>
-                    <div className="doc-card-header">
-                      <div className="doc-icon-wrap">
+                    <div className="doc-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div className="doc-icon-wrap" style={{ padding: '8px', background: '#f1f5f9', borderRadius: '8px' }}>
                         <IconFileText />
                       </div>
                       <span style={{ fontSize: '12px', fontWeight: '600', color: '#64748B' }}>
@@ -255,8 +259,8 @@ export function CitizenDashboard() {
                       </span>
                     </div>
                     <div className="doc-info" style={{ marginTop: '16px' }}>
-                      <h3>{doc.title}</h3>
-                      <p>{doc.desc}</p>
+                      <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '8px' }}>{doc.title}</h3>
+                      <p style={{ color: '#64748B', fontSize: '14px', lineHeight: '1.5' }}>{doc.desc}</p>
                     </div>
                   </div>
                   <button 
@@ -271,9 +275,9 @@ export function CitizenDashboard() {
           </section>
 
           {/* Application History Table */}
-          <section className="table-card">
-            <div className="table-header">
-              <h2>Recent Applications & Status History</h2>
+          <section id="history" className="table-card">
+            <div className="table-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: '700' }}>Recent Applications & Status History</h2>
               <span style={{ fontSize: '13px', color: '#64748B' }}>
                 {loadingApps ? 'Loading...' : `${applications.length} record(s)`}
               </span>
@@ -290,13 +294,13 @@ export function CitizenDashboard() {
             )}
 
             {!loadingApps && applications.length > 0 && (
-              <table className="history-table">
+              <table className="history-table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                 <thead>
-                  <tr>
-                    <th>Reference Number</th>
-                    <th>Document Type</th>
-                    <th>Submission Date</th>
-                    <th>Current Status</th>
+                  <tr style={{ borderBottom: '1px solid #e2e8f0', color: '#64748B', fontSize: '12px', textTransform: 'uppercase' }}>
+                    <th style={{ padding: '12px 0' }}>Reference Number</th>
+                    <th style={{ padding: '12px 0' }}>Document Type</th>
+                    <th style={{ padding: '12px 0' }}>Submission Date</th>
+                    <th style={{ padding: '12px 0' }}>Current Status</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -306,21 +310,29 @@ export function CitizenDashboard() {
                         badgeClass: "status-processing",
                       };
                       return (
-                        <tr key={row.id}>
-                          <td style={{ fontWeight: '600' }}>{row.referenceNumber}</td>
-                          <td>{DOC_TYPE_LABELS[row.documentType] || row.documentType}</td>
-                          <td>{new Date(row.createdAt).toLocaleDateString()}</td>
-                          <td>
+                        <tr key={row.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                          <td style={{ fontWeight: '600', padding: '16px 0' }}>{row.referenceNumber}</td>
+                          <td style={{ padding: '16px 0' }}>{DOC_TYPE_LABELS[row.documentType] || row.documentType}</td>
+                          <td style={{ padding: '16px 0' }}>{new Date(row.createdAt).toLocaleDateString()}</td>
+                          <td style={{ padding: '16px 0' }}>
                             <span className={`status-badge ${statusInfo.badgeClass}`}>
                               {statusInfo.label}
-                        </span>
-                      </td>
-                    </tr>
+                            </span>
+                          </td>
+                        </tr>
                     );
               })}
               </tbody>
             </table>
             )}
+          </section>
+
+          {/* Profile Security Section */}
+          <section id="profile" className="table-card">
+            <h2 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '8px' }}>Profile Security</h2>
+            <p style={{ color: '#64748B', fontSize: '14px' }}>
+              Your account is currently protected. To update your National ID registration linkage or change authentication credentials, please visit your nearest Civil Registry office.
+            </p>
           </section>
         </div>
       </main>

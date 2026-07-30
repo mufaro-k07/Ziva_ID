@@ -1,15 +1,14 @@
-# Virtual environment
-.venv/
-
-# Local secrets
+# Local secrets — matches .env at any depth (root, app/, client/)
 .env
 
-# Aiven TLS certificate
-backend/database/ca(1).pem
+# Dependencies
+node_modules/
 
-# Python cache
-__pycache__/
-*.py[cod]
+# Build output
+dist/
 
-# Testing
-.pytest_cache/
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
