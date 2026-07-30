@@ -1,0 +1,14 @@
+# Local secrets — matches .env at any depth (root, app/, client/)
+.env
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

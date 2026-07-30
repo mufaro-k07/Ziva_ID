@@ -1,0 +1,22 @@
+/* Presets */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --zim-green: #007A3D;
+  --zim-yellow: #FFD200;
+  --zim-red: #CE1126;
+  --zim-black: #000000;
+  --zim-white: #FFFFFF;
+  --slate-50: #F8FAFC;
+  --slate-100: #F1F5F9;
+  --slate-400: #94A3B8;
+  --slate-600: #475569;
+  --slate-800: #1E293B;
+  --slate-900: #0F172A;
+}
+
