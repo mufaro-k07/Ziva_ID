@@ -1,13 +1,5 @@
 import 'dotenv/config';
 
-/**
- * Single source of truth for server configuration.
- *
- * Every value is read and validated here at startup, so a misconfigured
- * deployment fails immediately with a clear message rather than surfacing
- * later as a confusing CORS, auth, or database error.
- */
-
 const NODE_ENV = process.env.NODE_ENV?.trim() || 'development';
 export const isProduction = NODE_ENV === 'production';
 

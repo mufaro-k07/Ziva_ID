@@ -1,16 +1,6 @@
 import { app } from "./app";
 import { env } from "./lib/env";
 
-/**
- * Local / persistent-server entry point.
- *
- * The application itself is built in `./app`. This file only starts a listener,
- * which is why serverless deployments import `./app` directly instead of this.
- *
- *   bun run dev    — watch mode
- *   bun run start  — no watch
- */
-
 app.listen(env.PORT);
 
 console.log(
