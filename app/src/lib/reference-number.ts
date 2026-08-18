@@ -1,5 +1,5 @@
-import { db } from "../db";
-import { intakeRecords } from "../db/schema";
+import { db } from "../db/index.js";
+import { intakeRecords } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 
 const DOC_TYPE_CODES: Record<string, string> = {

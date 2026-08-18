@@ -1,12 +1,9 @@
 import { Elysia, t } from "elysia";
-import { db } from "../db";
-import { intakeRecords, checklistItems, statusLogs } from "../db/schema";
+import { db } from "../db/index.js";
+import { intakeRecords, checklistItems, statusLogs } from "../db/schema.js";
 import { eq, and } from "drizzle-orm";
-import { generateReferenceNumber } from "../lib/reference-number";
+import { generateReferenceNumber } from "../lib/reference-number.js";
 
-// Prefixed "/api/citizen" so every ZivaID endpoint lives under /api, matching
-// Better Auth (which self-prefixes to /api/auth). That consistency is what lets
-// the frontend and API be served from a single origin behind one /api rewrite.
 export const citizenRoutes = new Elysia({ prefix: "/api/citizen" })
   // Submit a new intake form (FR5, FR7.1)
   .post(

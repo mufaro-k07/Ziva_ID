@@ -1,27 +1,11 @@
 import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
 import { openapi } from "@elysiajs/openapi";
-import { auth } from "./lib/auth";
-import { env } from "./lib/env";
-import { citizenRoutes } from "./routes/citizen";
-import { adminRoutes } from "./routes/admin";
+import { auth } from "./lib/auth.js";
+import { env } from "./lib/env.js";
+import { citizenRoutes } from "./routes/citizen.js";
+import { adminRoutes } from "./routes/admin.js";
 
-/**
- * Builds the ZivaID Elysia application WITHOUT starting a server.
- *
- * This file deliberately never calls `.listen()`. Two consumers import it:
- *
- *   - `src/index.ts`  — local development and any persistent-server host.
- *                       It imports this app and calls `.listen()`.
- *   - `api/index.ts`  — the serverless entry point, which exports the app as a
- *                       default export. Vercel does not support `.listen()`.
- *
- * There is exactly ONE app instance and ONE route registration path, so the
- * two environments cannot drift apart.
- *
- * Plugin order matters: `betterAuthPlugin` declares the `auth` and `adminOnly`
- * macros, so it MUST be registered before the route plugins that use them.
- */
 
 const betterAuthPlugin = new Elysia({ name: "better-auth" })
   .mount(auth.handler)

@@ -1,6 +1,6 @@
 import { Elysia, t } from "elysia";
-import { db } from "../db";
-import { user, intakeRecords, checklistItems, statusLogs } from "../db/schema";
+import { db } from "../db/index.js";
+import { user, intakeRecords, checklistItems, statusLogs } from "../db/schema.js";
 import { eq, desc } from "drizzle-orm";
 
 // Prefixed "/api/admin" — see the note in routes/citizen.ts.
