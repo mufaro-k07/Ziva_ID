@@ -1,61 +1,81 @@
 // src/pages/admin/AdminReview.jsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useSession } from '../../lib/auth-client';
+import {
+  API_BASE,
+  STATUS_OPTIONS,
+  statusLabel,
+  statusColor,
+  docTypeLabel,
+  submissionTier,
+  formatDateTime,
+} from '../../utils/records';
+import { ZIM_DISTRICTS } from '../../utils/zimDistricts';
 import '../../assets/admin.css';
 
+// districtCode is stored as the bare two-digit registry code, so resolve it to
+// a name for display — the code on its own means nothing to an officer.
+function districtLabel(code) {
+  if (!code) return '—';
+  const district = ZIM_DISTRICTS.find((d) => d.code === code);
+  return district ? `${code} (${district.name})` : code;
+}
+
 export function AdminReview() {
-  const { recordId } = useParams();
+
+  const { recordId: referenceNumber } = useParams();
   const navigate = useNavigate();
+  const { data: session } = useSession();
 
-  const officerName = "Officer P. Kunze";
-  const officerId = "RG-HARARE-042";
+  const officerName = session?.user?.name || 'Officer';
+  const officerEmail = session?.user?.email || '—';
+  const officerInitials = officerName.slice(0, 2).toUpperCase();
 
-  // Mock data
-  const [record, setRecord] = useState({
-    referenceNumber: recordId || "ZIV-2026-8841",
-    citizen: "Mufaro Moyo",
-    dateOfBirth: "2008-04-14",
-    gender: "Female",
-    placeOfOrigin: "Sally Mugabe Central Hospital, Harare",
-    nationalId: "63-2345678-F-42",
-    docType: "Birth Certificate",
-    submittedDate: "2026-07-28",
-    status: "under_review",
-    type: "Self-Service",
-    districtCode: "63 (Harare Metropolitan)",
+  const [record, setRecord] = useState(null);
+  const [loadingRecord, setLoadingRecord] = useState(true);
+  const [fetchError, setFetchError] = useState('');
 
-    details: {
-      motherName: "Chipo Moyo",
-      motherMaidenName: "Ndlovu",
-      motherIdNumber: "63-9988776-Z-12",
-      fatherName: "Not Acknowledged / Single Application",
-      hospitalOfBirth: "Sally Mugabe Central Hospital"
-    },
-    
-    checklist: [
-      { itemLabel: "Notification of Birth from hospital/clinic", isAvailable: true },
-      { itemLabel: "Mother's national ID card (Original + Certified Copy)", isAvailable: true },
-      { itemLabel: "Father's national ID card (if applicable)", isAvailable: false },
-      { itemLabel: "Marriage certificate (if parents are married)", isAvailable: false }
-    ]
-  });
-
-  const [newStatus, setNewStatus] = useState(record.status);
+  const [newStatus, setNewStatus] = useState('');
   const [officerComment, setOfficerComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [auditHistory, setAuditHistory] = useState([
-    {
-      timestamp: "28 Jul 2026, 10:15 AM",
-      action: "SUBMITTED",
-      user: "Citizen Self-Service Portal",
-      notes: "Intake form completed and reference ticket generated."
+
+  // This reloadKey would allow us to Re-run the fetch below, so the badge and the audit timeline reflect what was just written.
+  const [reloadKey, setReloadKey] = useState(0);
+
+  useEffect(() => {
+    async function loadRecord() {
+      setFetchError('');
+      try {
+        const res = await fetch(
+          `${API_BASE}/admin/intakes/${encodeURIComponent(referenceNumber)}`,
+          { credentials: 'include' } // sends the officer's session cookie
+        );
+
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body.error || 'Failed to load this intake record.');
+        }
+
+        const data = await res.json();
+        setRecord(data);
+        setNewStatus(data.status);
+      } catch (err) {
+        setFetchError(err.message);
+      } finally {
+        setLoadingRecord(false);
+      }
     }
-  ]);
+
+    loadRecord();
+  }, [referenceNumber, reloadKey]);
 
   const handleStatusUpdate = async (e) => {
     e.preventDefault();
 
-    if (!officerComment.trim()) {
+    // The server enforces a 3-character minimum, so mirror it here rather than
+    // letting a validation rejection come back as a generic failure.
+    if (officerComment.trim().length < 3) {
       alert("Validation Error: Please provide an official review remark or reason before updating status.");
       return;
     }
@@ -63,32 +83,55 @@ export function AdminReview() {
     setIsSubmitting(true);
 
     try {
-    const res = await fetch(`http://localhost:3000/admin/intakes/${record.referenceNumber}/status`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({
-        newStatus: newStatus,
-        comment: officerComment,
-      }),
-    });
+      const res = await fetch(
+        `${API_BASE}/admin/intakes/${encodeURIComponent(record.referenceNumber)}/status`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            newStatus: newStatus,
+            comment: officerComment,
+          }),
+        }
+      );
 
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || "Failed to update record status");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || err.message || "Failed to update record status");
+      }
+
+      const data = await res.json();
+      alert(data.message);
+
+      setOfficerComment("");
+      setReloadKey((key) => key + 1);
+    } catch (err) {
+      alert(`System Error: ${err.message}`);
+    } finally {
+      setIsSubmitting(false);
     }
+  };
 
-    const data = await res.json();
-    alert(data.message);
-    
-    // Refresh the local UI state after successful DB update
-    window.location.reload(); 
-  } catch (err) {
-    alert(`System Error: ${err.message}`);
-  } finally {
-    setIsSubmitting(false);
+  if (loadingRecord) return <p style={{ padding: '40px' }}>Loading record…</p>;
+
+  if (fetchError || !record) {
+    return (
+      <div style={{ padding: '40px' }}>
+        <p style={{ color: '#B91C1C', fontWeight: '600' }}>
+          {fetchError || 'Intake record not found.'}
+        </p>
+        <button className="btn-action" onClick={() => navigate('/admin/dashboard')}>
+          ← Back to Review Queue
+        </button>
+      </div>
+    );
   }
-};
+
+  const badge = statusColor(record.status);
+  const details = record.details || {};
+  const checklist = record.checklist || [];
+  const auditHistory = record.auditHistory || [];
 
   return (
     <div className="admin-container">
@@ -119,10 +162,10 @@ export function AdminReview() {
             Document Inspection & Adjudication: {record.referenceNumber}
           </div>
           <div className="admin-profile-badge">
-            <div className="admin-avatar">PK</div>
+            <div className="admin-avatar">{officerInitials}</div>
             <div>
               <div style={{ fontSize: '14px', fontWeight: '600' }}>{officerName}</div>
-              <div style={{ fontSize: '12px', color: '#64748B' }}>Station: {officerId}</div>
+              <div style={{ fontSize: '12px', color: '#64748B' }}>{officerEmail}</div>
             </div>
           </div>
         </header>
@@ -132,36 +175,44 @@ export function AdminReview() {
           <div>
             <section className="admin-card">
               <div className="admin-card-header">
-                <h2>Applicant Core Details ({record.docType})</h2>
+                <h2>Applicant Core Details ({docTypeLabel(record.documentType)})</h2>
                 <span style={{
                   padding: '4px 12px',
                   borderRadius: '16px',
                   fontWeight: '700',
                   fontSize: '12px',
                   textTransform: 'uppercase',
-                  background: record.status === 'verified' ? '#DCFCE7' : record.status === 'rejected' ? '#FEE2E2' : '#FEF3C7',
-                  color: record.status === 'verified' ? '#166534' : record.status === 'rejected' ? '#991B1B' : '#92400E'
+                  background: badge.background,
+                  color: badge.color
                 }}>
-                  Current Status: {record.status}
+                  Current Status: {statusLabel(record.status)}
                 </span>
               </div>
                 <div className="admin-card-content" style={{ padding: '10px 10px' }}>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', margin: '16px 0' }}>
                         <div>
                         <label style={{ fontSize: '12px', color: '#64748B', fontWeight: '600' }}>FULL LEGAL NAME</label>
-                        <p style={{ margin: '4px 0 0', fontWeight: '700', fontSize: '16px' }}>{record.citizen}</p>
+                        <p style={{ margin: '4px 0 0', fontWeight: '700', fontSize: '16px' }}>{record.fullName}</p>
                         </div>
                         <div>
                         <label style={{ fontSize: '12px', color: '#64748B', fontWeight: '600' }}>DATE OF BIRTH</label>
                         <p style={{ margin: '4px 0 0', fontWeight: '600' }}>{record.dateOfBirth}</p>
                         </div>
                         <div>
+                        <label style={{ fontSize: '12px', color: '#64748B', fontWeight: '600' }}>GENDER</label>
+                        <p style={{ margin: '4px 0 0', fontWeight: '600' }}>{record.gender || '—'}</p>
+                        </div>
+                        <div>
+                        <label style={{ fontSize: '12px', color: '#64748B', fontWeight: '600' }}>PLACE OF ORIGIN</label>
+                        <p style={{ margin: '4px 0 0', fontWeight: '600' }}>{record.placeOfOrigin || '—'}</p>
+                        </div>
+                        <div>
                         <label style={{ fontSize: '12px', color: '#64748B', fontWeight: '600' }}>DISTRICT OF ORIGIN</label>
-                        <p style={{ margin: '4px 0 0', fontWeight: '600' }}>{record.districtCode}</p>
+                        <p style={{ margin: '4px 0 0', fontWeight: '600' }}>{districtLabel(record.districtCode)}</p>
                         </div>
                         <div>
                         <label style={{ fontSize: '12px', color: '#64748B', fontWeight: '600' }}>SUBMISSION TIER</label>
-                        <p style={{ margin: '4px 0 0', fontWeight: '600' }}>{record.type}</p>
+                        <p style={{ margin: '4px 0 0', fontWeight: '600' }}>{submissionTier(record)}</p>
                         </div>
                     </div>
                 </div>
@@ -169,8 +220,14 @@ export function AdminReview() {
               <hr style={{ border: 'none', borderTop: '1px solid #E2E8F0', margin: '20px 0' }} />
 
               <h3 style={{ fontSize: '15px', fontWeight: '700', margin: '0 0 12px' }}>Submitted Additional Information</h3>
+              {Object.keys(details).length === 0 && (
+                <p style={{ color: '#64748B', fontSize: '13px' }}>
+                  No additional information was submitted with this record.
+                </p>
+              )}
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                {Object.entries(record.details).map(([key, val]) => (
+                {Object.entries(details).map(([key, val]) => (
                   <div key={key} style={{ background: '#F8FAFC', padding: '10px', borderRadius: '6px' }}>
                     <div style={{ fontSize: '11px', color: '#64748B', textTransform: 'uppercase', fontWeight: '600' }}>
                       {key.replace(/([A-Z])/g, ' $1')}
@@ -184,7 +241,13 @@ export function AdminReview() {
 
               <h3 style={{ fontSize: '15px', fontWeight: '700', margin: '24px 0 12px' }}>Verified Physical Checklist</h3>
               <div>
-                {record.checklist.map((item, index) => (
+                {checklist.length === 0 && (
+                  <p style={{ color: '#64748B', fontSize: '13px' }}>
+                    No checklist items were captured for this record.
+                  </p>
+                )}
+
+                {checklist.map((item, index) => (
                   <div key={index} style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -224,11 +287,9 @@ export function AdminReview() {
                     value={newStatus}
                     onChange={(e) => setNewStatus(e.target.value)}
                     >
-                    <option value="submitted">SUBMITTED</option>
-                    <option value="under_review">UNDER REVIEW</option>
-                    <option value="missing_information">MISSING INFORMATION</option>
-                    <option value="ready_for_registry_visit">READY FOR REGISTRY VISIT</option>
-                    <option value="closed">CLOSED</option>
+                    {STATUS_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
                     </select>
                 </div>
 
@@ -271,17 +332,23 @@ export function AdminReview() {
             <section className="admin-card">
               <h3 style={{ fontSize: '15px', fontWeight: '700', margin: '0 0 12px' }}>Immutable Audit History</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {auditHistory.map((log, index) => (
-                  <div key={index} style={{
+                {auditHistory.length === 0 && (
+                  <p style={{ color: '#64748B', fontSize: '13px' }}>
+                    No status changes have been logged against this record yet.
+                  </p>
+                )}
+
+                {auditHistory.map((log) => (
+                  <div key={log.id} style={{
                     borderLeft: '3px solid #0F172A',
                     paddingLeft: '12px',
                     fontSize: '12px'
                   }}>
-                    <div style={{ color: '#64748B', fontWeight: '600' }}>{log.timestamp}</div>
+                    <div style={{ color: '#64748B', fontWeight: '600' }}>{formatDateTime(log.createdAt)}</div>
                     <div style={{ fontWeight: '700', color: '#0F172A', marginTop: '2px' }}>
-                      [{log.action}] by {log.user}
+                      [{statusLabel(log.newStatus).toUpperCase()}] by {log.changedBy || 'Unknown officer'}
                     </div>
-                    <p style={{ margin: '4px 0 0', color: '#334155' }}>{log.notes}</p>
+                    <p style={{ margin: '4px 0 0', color: '#334155' }}>{log.comment || '—'}</p>
                   </div>
                 ))}
               </div>
